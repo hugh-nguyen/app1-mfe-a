@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Path Getter</title>
+    <title>Path Getter A</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -63,18 +63,59 @@
         }
     </style>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Page loaded, fetching headers...");
+            fetchCurrentPageHeaders();
+        });
+
+        function fetchCurrentPageHeaders() {
+            const cookieObj = {};
+            document.cookie.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                if (parts.length >= 2) {
+                    const key = parts[0];
+                    const value = parts.slice(1).join('=');
+                    cookieObj[key] = value;
+                }
+            });
+            
+            const appVersion = cookieObj['X-App-Version'];
+            const appName = cookieObj['X-App-Name'];
+            
+            console.log("All cookies:", cookieObj);
+            console.log("Current page headers from cookies:", {
+                'X-App-Version': appVersion,
+                'X-App-Name': appName
+            });
+            
+            window.pageHeaders = {
+                'X-App-Version': appVersion,
+                'X-App-Name': appName
+            };
+        }
+
         async function fetchResult() {
             const resultEl = document.getElementById("result");
             resultEl.innerHTML = '<div class="loading"></div> Fetching result...';
 
-            // const url = "http://hn-cortex.click/app1/service-b/getresult/";
-            const subdomain = "k8s-eksingressgroup-e31e0db899-1644984939";
+            const subdomain = "k8s-eksingressgroup-e31e0db899-864799364";
             const domain = "ap-southeast-2.elb.amazonaws.com"
             const url = `http://${subdomain}.${domain}/app1/service-b/getresult/`
-
+            // const url = 'http://hn-cortex.click/app1/service-b/getresult/'
             try {
+                const headers = {};
+                if (window.pageHeaders) {
+                    if (window.pageHeaders['X-App-Version']) 
+                        headers['X-App-Version'] = window.pageHeaders['X-App-Version'];
+                    if (window.pageHeaders['X-App-Name']) 
+                        headers['X-App-Name'] = window.pageHeaders['X-App-Name'];
+                }
+
+                console.log("Forwarding headers to service-b:", headers);
+
                 const response = await fetch(url, {
                     method: "GET",
+                    headers: headers
                 });
 
                 if (!response.ok) {
